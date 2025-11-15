@@ -111,6 +111,8 @@
 		}
 
 		queueBtn.addEventListener('click', async ()=>{
+			// prevent queuing while in practice
+			if(window.__practiceActive){ alert('Finish practice before queuing ranked matches.'); return; }
 			queueBtn.disabled = true;
 			// pick opponent before countdown so the player sees who they're facing
 		 	const playerElo = getElo();
@@ -125,6 +127,112 @@
 		 	// 3 second countdown then start match
 		 	await doCountdown(3);
 		 	startMatch();
+		});
+
+		// Practice mode: create a button next to queueBtn that toggles practice mode
+		let practiceBtn = document.getElementById('practiceBtn');
+		if(!practiceBtn){
+			practiceBtn = document.createElement('button');
+			practiceBtn.id = 'practiceBtn';
+			practiceBtn.textContent = 'Practice Mode';
+			practiceBtn.title = 'Enter endless practice mode';
+			practiceBtn.style.marginRight = '8px';
+			practiceBtn.style.background = '#ef4444';
+			practiceBtn.style.borderRadius = '8px';
+			practiceBtn.style.padding = '10px 14px';
+			practiceBtn.style.color = '#fff';
+			practiceBtn.style.cursor = 'pointer';
+			// insert before queue button
+			if(queueBtn && queueBtn.parentNode) queueBtn.parentNode.insertBefore(practiceBtn, queueBtn);
+		}
+
+		let practiceActive = false;
+		window.__practiceActive = false; // small global flag for quick checks elsewhere
+
+		async function practiceRound(){
+			return new Promise(resolve => {
+				const target = spawnTarget();
+				const start = performance.now();
+				let clicked = false;
+				let playerTime = null;
+
+				function onClick(){
+					if(clicked) return; clicked = true;
+					playerTime = Math.round(performance.now() - start);
+					cleanup();
+					resolve(playerTime);
+				}
+				target.addEventListener('click', onClick);
+
+				// timer to remove after 5s
+				let remaining = 5000;
+				timeLeft.textContent = Math.ceil(remaining/1000) + 's';
+				const tick = setInterval(()=>{
+					remaining -= 100;
+					timeLeft.textContent = Math.max(0, Math.ceil(remaining/1000)) + 's';
+				},100);
+
+				const timeout = setTimeout(()=>{
+					if(!clicked) playerTime = null;
+					cleanup();
+					resolve(playerTime);
+				},5000);
+
+				function cleanup(){
+					clearTimeout(timeout);
+					clearInterval(tick);
+					timeLeft.textContent = '-';
+					arena.querySelectorAll('.target').forEach(n=>n.remove());
+					target.removeEventListener('click', onClick);
+				}
+			});
+		}
+
+		async function startPractice(){
+			if(practiceActive) return;
+			practiceActive = true;
+			window.__practiceActive = true;
+			practiceBtn.textContent = 'End Practice';
+			practiceBtn.style.background = '#065f46';
+			queueBtn.disabled = true; // cannot queue while practicing
+			log.textContent = 'Practice mode: hit the targets as they spawn. Click End Practice to stop.';
+			// loop until practiceActive is false
+			while(practiceActive){
+				const t = await practiceRound();
+				if(t === null){
+					log.textContent = 'Missed the target — try again.';
+				} else {
+					log.textContent = `Hit! Reaction: ${t} ms`;
+					// update player stats with practice reactions
+					try{
+						const stats = loadPlayerStats();
+						stats.totalReaction = (stats.totalReaction || 0) + t;
+						stats.totalRounds = (stats.totalRounds || 0) + 1;
+						if(stats.bestReaction === null || t < stats.bestReaction) stats.bestReaction = t;
+						savePlayerStats(stats);
+					}catch(e){console.error('Failed to update stats from practice', e)}
+				}
+				// slight delay between targets
+				await new Promise(s=>setTimeout(s, 350));
+			}
+			// cleanup on exit
+			queueBtn.disabled = false;
+			practiceBtn.textContent = 'Practice Mode';
+			practiceBtn.style.background = '#ef4444';
+			window.__practiceActive = false;
+			log.textContent = 'Practice ended.';
+		}
+
+		function stopPractice(){
+			practiceActive = false;
+			// remove any lingering targets and reset UI
+			arena.querySelectorAll('.target').forEach(n=>n.remove());
+			timeLeft.textContent = '-';
+		}
+
+		practiceBtn.addEventListener('click', ()=>{
+			if(practiceActive){ stopPractice(); }
+			else { startPractice(); }
 		});
 
 		async function startMatch(){
@@ -332,7 +440,7 @@
 		/* ---------------- Leaderboard logic (global) ---------------- */
 		const LB_KEY = 'mock_leaderboard_v1';
 		const LB_COUNT = 50;
-		const LB_REFRESH_MS = 60000
+		const LB_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
 		const lbEl = document.getElementById('leaderboard');
 		const PLAYER_STATS_KEY = 'player_stats_v1';
 		let lastShownBoard = [];
@@ -596,6 +704,5 @@
 			};
 			input.click();
 		});
-
 
 	})();
