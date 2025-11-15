@@ -332,7 +332,7 @@
 		/* ---------------- Leaderboard logic (global) ---------------- */
 		const LB_KEY = 'mock_leaderboard_v1';
 		const LB_COUNT = 50;
-		const LB_REFRESH_MS = 5 * 60 * 1000; // 5 minutes
+		const LB_REFRESH_MS = 60000
 		const lbEl = document.getElementById('leaderboard');
 		const PLAYER_STATS_KEY = 'player_stats_v1';
 		let lastShownBoard = [];
@@ -596,5 +596,6 @@
 			};
 			input.click();
 		});
+
 
 	})();
