@@ -1,4 +1,4 @@
-Aim2 — Ranked vs Bot (Local, Browser)
+Aim — Ranked vs Bot (Local, Browser)
 =====================================
 
 Overview
