@@ -1,9 +1,9 @@
-Aim — Ranked vs Bot (Local, Browser)
+Aim2 — Ranked vs Bot (Local, Browser)
 =====================================
 
 Overview
 --------
-Aim is a small browser-based aim training / ranked simulation that stores a local ELO and lets you play 1-player ranked matches vs bots. It is intended to run locally from the project folder (no server required).
+Aim2 is a small browser-based aim training / ranked simulation that stores a local ELO and lets you play 1-player ranked matches vs bots. It is intended to run locally from the project folder (no server required).
 
 Key features
 ------------
@@ -50,4 +50,17 @@ Developer notes
 ---------------
 - Bot reaction and miss behaviour is in `simulateBotReaction(botElo)` inside `index.html`.
 - Per-round and per-match ELO changes use a small K-factor for visible changes per round and K=32 for match-level calculation.
+
+Credits
+-------
+- Built as a local demo project. If you want a more secure, server-backed ranked system I can outline a simple backend design.
+
+License
+-------
+- No license declared. If you want an open-source license added (MIT, Apache, etc.), tell me which one and I will add it.
+
+Enjoy! If you'd like I can also:
+- Include `player_stats_v1` in encrypted backups by default.
+- Add a "My Profile" header button.
+- Add a minimal Node/Express backend to make ELO authoritative server-side.
 
