@@ -3,7 +3,7 @@ Aim — Ranked vs Bot (Local, Browser)
 
 Overview
 --------
-Aim2 is a small browser-based aim training / ranked simulation that stores a local ELO and lets you play 1-player ranked matches vs bots. It is intended to run locally from the project folder (no server required).
+Aim is a small browser-based aim training / ranked simulation that stores a local ELO and lets you play 1-player ranked matches vs bots. It is intended to run locally from the project folder (no server required).
 
 Key features
 ------------
