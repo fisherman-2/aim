@@ -51,17 +51,3 @@ Developer notes
 - Bot reaction and miss behaviour is in `simulateBotReaction(botElo)` inside `index.html`.
 - Per-round and per-match ELO changes use a small K-factor for visible changes per round and K=32 for match-level calculation.
 
-Credits
--------
-- Built as a local demo project. If you want a more secure, server-backed ranked system I can outline a simple backend design.
-
-License
--------
-- No license declared. If you want an open-source license added (MIT, Apache, etc.), tell me which one and I will add it.
-
-Enjoy! If you'd like I can also:
-- Include `player_stats_v1` in encrypted backups by default.
-- Add a "My Profile" header button.
-- Add a minimal Node/Express backend to make ELO authoritative server-side.
-
-
