@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Aim - Ranked vs Bot</title>
+	<style>
+		body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;margin:0;background:#0f1720;color:#e6eef8}
+		.container{max-width:980px;margin:30px auto;padding:20px}
+		header{display:flex;align-items:center;gap:16px}
+		#emblem{width:64px;height:64px;object-fit:contain}
+		.info{display:flex;flex-direction:column}
+		.big{font-size:20px;font-weight:700}
+		.muted{opacity:.8}
+		button{padding:10px 14px;border-radius:8px;border:0;background:#2563eb;color:white;cursor:pointer}
+		#gameArea{margin-top:20px;background:#071025;border-radius:8px;padding:16px;min-height:360px;position:relative;overflow:hidden}
+		.hud{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+		#arena{position:relative;background:linear-gradient(180deg,#071025,#061322);height:300px;border-radius:8px;overflow:hidden}
+		.target{position:absolute;width:60px;height:60px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 20px rgba(255,59,59,.6);display:flex;align-items:center;justify-content:center;cursor:pointer}
+		.center{display:flex;align-items:center;justify-content:center}
+		#log{margin-top:12px;color:#cfe6ff}
+		#queueBtn{background:#10b981}
+		.hidden{display:none}
+		.result{margin-top:12px;padding:10px;background:#082a2a;border-radius:8px}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<header>
+			<img id="emblem" src="img/emblems/bronze1.png" alt="emblem"/>
+			<div class="info">
+				<div class="big">ELO: <span id="eloDisplay">1000</span></div>
+				<div class="muted">Rank: <span id="rankDisplay">Bronze 1</span></div>
+			</div>
+			<div style="margin-left:auto" class="center">
+				<button id="helpBtn" title="How it works" style="margin-right:8px;border-radius:50%;width:36px;height:36px;padding:0;background:#334155;color:#fff;border:0;cursor:pointer">?</button>
+				<button id="backupBtn" title="Backup data" style="margin-right:8px;border-radius:6px;padding:6px 8px;background:#1f2937;color:#fff;border:0;cursor:pointer">Backup</button>
+				<button id="restoreBtn" title="Restore data" style="margin-right:8px;border-radius:6px;padding:6px 8px;background:#374151;color:#fff;border:0;cursor:pointer">Restore</button>
+				<button id="queueBtn">Queue Ranked vs Bot</button>
+			</div>
+		</header>
+
+		<div id="gameArea">
+			<div class="hud">
+				<div>Round: <span id="roundNum">-</span></div>
+				<div>Time left: <span id="timeLeft">-</span></div>
+				<div>Opponent: <span id="botName">-</span></div>
+				<div>Opponent ELO: <span id="botElo">-</span></div>
+			</div>
+
+			<div id="arena">
+				<!-- target will be inserted here -->
+				<div id="countdown" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:800;color:#fff;pointer-events:none;opacity:0;transition:opacity .12s"></div>
+			</div>
+
+			<div id="log">Ready. Click "Queue Ranked vs Bot" to start.</div>
+
+			<div id="resultBox" class="result hidden"></div>
+
+			<!-- Leaderboard -->
+			<div id="leaderboardArea" style="margin-top:16px;padding:12px;background:#06131a;border-radius:8px;color:#dff6ff">
+				<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+					<strong>Leaderboard — Top 50</strong>
+				</div>
+				<div id="leaderboard" style="max-height:320px;overflow:auto;font-size:14px"></div>
+				<div style="margin-top:8px;color:#a7d1ff;font-size:12px">Leaderboard auto-refreshes every 5 minutes and applies small ELO changes to everyone.</div>
+			</div>
+
+			<!-- Profile modal -->
+			<div id="profileModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.7);z-index:70">
+				<div style="background:#071622;color:#e6eef8;padding:18px;border-radius:10px;max-width:560px;width:92%;max-height:86%;overflow:auto;box-shadow:0 10px 40px rgba(2,6,23,0.9)">
+					<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+						<strong id="profileTitle" style="font-size:18px">Player Profile</strong>
+						<button id="profileClose" style="margin-left:auto;background:transparent;border:0;color:#a7d1ff;cursor:pointer">Close ✕</button>
+					</div>
+					<div id="profileContent" style="line-height:1.35;color:#cfe6ff">
+						<!-- filled by JS -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Help modal -->
+	<div id="helpModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.7);z-index:60">
+		<div style="background:#071622;color:#e6eef8;padding:18px;border-radius:10px;max-width:820px;width:92%;max-height:86%;overflow:auto;box-shadow:0 10px 40px rgba(2,6,23,0.9)">
+			<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+				<strong style="font-size:18px">How Ranked vs Bot works</strong>
+				<button id="helpClose" style="margin-left:auto;background:transparent;border:0;color:#a7d1ff;cursor:pointer">Close ✕</button>
+			</div>
+			<div style="line-height:1.35;color:#cfe6ff">
+				<p>This is a 1-player ranked mode vs a bot. Flow:</p>
+				<ul>
+					<li>Click <strong>Queue Ranked vs Bot</strong> — opponent name & ELO are shown.</li>
+					<li>A 3-second countdown runs, then the match begins.</li>
+					<li>The match is 3 rounds. Each round a red target appears for up to 5 seconds.</li>
+					<li>Click the red circle as fast and accurately as possible. If you miss, you are punished more heavily.</li>
+					<li>After 3 rounds the match completes and you see per-round history and ELO changes.</li>
+				</ul>
+				<p><strong>ELO & Divisions</strong></p>
+				<p>Your ELO is stored locally (in your browser). ELO cannot go below <code>1000</code>. Division mapping (current):</p>
+				<ul>
+					<li><strong>1000–1099</strong> — Bronze 1</li>
+					<li><strong>1100–1199</strong> — Bronze 2</li>
+					<li><strong>1200–1299</strong> — Bronze 3</li>
+					<li><strong>1300–1399</strong> — Bronze 4</li>
+					<li><strong>1400–1499</strong> — Silver 1</li>
+					<li><strong>1500–1599</strong> — Silver 2</li>
+					<li><strong>1600–1699</strong> — Silver 3</li>
+					<li><strong>1700–1799</strong> — Silver 4</li>
+					<li><strong>1800–1899</strong> — Gold 1</li>
+					<li><strong>1900–1999</strong> — Gold 2</li>
+					<li><strong>2000–2099</strong> — Gold 3</li>
+					<li><strong>2100–2199</strong> — Gold 4</li>
+					<li><strong>2200–2299</strong> — Champion 1</li>
+					<li><strong>2300–2399</strong> — Champion 2</li>
+					<li><strong>2400–2499</strong> — Champion 3</li>
+					<li><strong>2500+</strong> — Champion 4 (and above)</li>
+					<li><strong>3000+</strong> — Grand Champion (no subdivisions)</li>
+				</ul>
+				<p>Below are the emblem pictures used for each division (fallbacks shown if images are missing):</p>
+				<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:8px">
+					<!-- bronze -->
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/bronze1.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Bronze 1</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/bronze2.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Bronze 2</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/bronze3.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Bronze 3</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/bronze4.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Bronze 4</div>
+					<!-- silver -->
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/silver1.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Silver 1</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/silver2.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Silver 2</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/silver3.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Silver 3</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/silver4.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Silver 4</div>
+					<!-- gold -->
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/gold1.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Gold 1</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/gold2.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Gold 2</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/gold3.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Gold 3</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/gold4.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Gold 4</div>
+					<!-- champion -->
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/champion1.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Champion 1</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/champion2.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Champion 2</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/champion3.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Champion 3</div>
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/champion4.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Champion 4</div>
+					<!-- grandchamp -->
+					<div style="display:flex;align-items:center;gap:8px"><img src="img/emblems/grandchamp.png" onerror="this.src='img/emblems/bronze1.png'" style="width:44px;height:44px"> Grand Champion</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="node.js"></script>
+</body>
+</html>
+
