@@ -22,6 +22,20 @@
 		#queueBtn{background:#10b981}
 		.hidden{display:none}
 		.result{margin-top:12px;padding:10px;background:#082a2a;border-radius:8px}
+
+		/* Tier-up animation overlay */
+		#tierAnimOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:9999}
+		.tier-anim{
+			padding:18px 28px;border-radius:12px;color:#fff;font-weight:900;font-size:44px;text-align:center;letter-spacing:1px;pointer-events:none;transform:scale(.9);animation:pop .6s cubic-bezier(.2,.9,.2,1) both
+		}
+		.tier-anim.champion{background:linear-gradient(90deg,#ffd86b,#ffb86b);color:#2b1700;text-shadow:0 6px 28px rgba(255,200,80,0.12)}
+		.tier-anim.grand{background:linear-gradient(90deg,#ff66a1,#ff3b7a);color:#fff;text-shadow:0 10px 40px rgba(255,60,120,0.14);font-size:56px}
+
+		@keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.06);opacity:1}100%{transform:scale(1);opacity:1}}
+
+		/* confetti pieces */
+		.confetti-piece{position:absolute;width:10px;height:16px;border-radius:2px;opacity:0;transform:translateY(-20px) rotate(0deg);animation:confettiFall 1800ms linear forwards}
+		@keyframes confettiFall{0%{opacity:1;transform:translateY(-30vh) rotate(0deg)}100%{opacity:1;transform:translateY(60vh) rotate(720deg);opacity:0}}
 	</style>
 </head>
 <body>
@@ -81,6 +95,9 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Tier-up animation overlay (in DOM so CSS loads eagerly) -->
+	<div id="tierAnimOverlay" aria-hidden="true"></div>
 
 	<!-- Help modal -->
 	<div id="helpModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.7);z-index:60">

@@ -12,8 +12,22 @@
 
 		function setElo(n){
 			n = Math.max(MIN_ELO, Math.round(n));
+			const prev = getElo();
 			localStorage.setItem('elo', n);
 			updateEloUI();
+			// detect tier-up into Champion or Grand Champion
+			try{
+				const prevRank = eloToRank(prev);
+				const newRank = eloToRank(n);
+				if(prevRank.tier !== newRank.tier){
+					// Grand Champion has precedence
+					if(newRank.tier === 'Grand Champion'){
+						showTierAnimation('Grand Champion');
+					} else if(newRank.tier === 'Champion'){
+						showTierAnimation('Champion');
+					}
+				}
+			}catch(e){/* ignore */}
 		}
 
 		function eloToRank(elo){
@@ -51,6 +65,44 @@
 			rankDisplay.textContent = r.name;
 			emblem.src = r.img;
 			emblem.onerror = ()=>{ emblem.src = 'img/emblems/bronze4.png'; };
+		}
+
+		// Show Champion / Grand Champion animations
+		function showTierAnimation(tierName){
+			try{
+				const overlay = document.getElementById('tierAnimOverlay') || document.body;
+				const anim = document.createElement('div');
+				anim.className = 'tier-anim ' + (tierName === 'Grand Champion' ? 'grand' : 'champion');
+				anim.textContent = tierName === 'Grand Champion' ? 'GRAND CHAMPION!' : 'Champion Reached!';
+				overlay.appendChild(anim);
+				// create confetti pieces
+				const colors = ['#ffde59','#ffd86b','#ff9d76','#ff66a1','#6ee7b7','#8bd3ff'];
+				const pieces = [];
+				for(let i=0;i<60;i++){
+					const p = document.createElement('div');
+					p.className = 'confetti-piece';
+					p.style.background = colors[Math.floor(Math.random()*colors.length)];
+					p.style.left = (20 + Math.random()*60) + '%';
+					p.style.top = (-10 - Math.random()*20) + 'vh';
+					p.style.width = (6 + Math.random()*12) + 'px';
+					p.style.height = (10 + Math.random()*20) + 'px';
+					p.style.animationDelay = (Math.random()*600) + 'ms';
+					p.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+					overlay.appendChild(p);
+					pieces.push(p);
+				}
+
+				// remove after animation
+				setTimeout(()=>{
+					anim.style.transition = 'opacity .6s';
+					anim.style.opacity = '0';
+					pieces.forEach(p=>{ p.style.transition = 'opacity .6s'; p.style.opacity = '0'; });
+					setTimeout(()=>{
+						anim.remove();
+						pieces.forEach(p=>p.remove());
+					},800);
+				},3000);
+			}catch(e){console.error('Tier animation failed', e)}
 		}
 
 		updateEloUI();
